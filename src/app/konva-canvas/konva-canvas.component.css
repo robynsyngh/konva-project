@@ -1,0 +1,67 @@
+/* Toolbar container */
+.toolbar {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background-color: #f1f1f1;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 10;
+  }
+  
+  /* Canvas container */
+  #canvas-container {
+    margin-top: 50px; 
+    width: 100%;
+    height: calc(100vh - 50px); 
+  }
+  
+  /* Style the buttons */
+  button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background-color: #0056b3;
+  }
+  
+  input[type="file"] {
+    padding: 5px;
+    border-radius: 5px;
+  }
+
+  button:disabled {
+    background-color: #ccc;
+    color: #888;
+    cursor: not-allowed;
+  }
+
+
+  
+@media (max-width: 600px) {
+    .toolbar {
+      flex-direction: column; 
+      align-items: center;
+      justify-content: center;
+    }
+  
+    button {
+      width: 90%; 
+      margin-bottom: 5px;
+    }
+  }
+
+  /* #canvas-container {
+    width: 100%;
+    height: 100vh;
+    position: relative;
+    overflow: hidden; 
+  } */

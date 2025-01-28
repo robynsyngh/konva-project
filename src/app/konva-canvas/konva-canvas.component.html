@@ -3,9 +3,23 @@
     <button (click)="clearMask()">Clear Mask</button>
     <button (click)="exportAsFile()">Export Mask</button>
     <button (click)="removeImage()" [disabled]="!file">Delete Image</button>
-    <input type="file" (change)="onImageUpload($event)" accept="image/*" />
+    <!-- <input type="file" (change)="onImageUpload($event)" accept="image/*" /> -->
+      <!-- Custom file input button -->
+  <div class="file-input-container">
+    <label for="file-upload" class="file-input-label"> Choose File
+    </label>
+    <input type="file" id="file-upload" (change)="onImageUpload($event)" accept="image/*" />
+  </div>
   </div>
   
   <!-- Canvas container -->
   <div id="canvas-container"></div>
   
+
+
+  <div class="modal" *ngIf=" error_msg">
+    <div class="modal-content">
+      <span class="close" (click)="error_msg = null">&times;</span>
+      <strong>Warning!</strong> {{ error_msg }}
+    </div>
+  </div>

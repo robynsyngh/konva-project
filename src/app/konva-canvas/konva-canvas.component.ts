@@ -1,10 +1,11 @@
+import { CommonModule } from '@angular/common';
 import { AfterViewInit, Component, OnInit } from '@angular/core';
 import Konva from 'konva';
 
 @Component({
   selector: 'app-konva-canvas',
   standalone: true,
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './konva-canvas.component.html',
   styleUrl: './konva-canvas.component.css'
 })
@@ -18,28 +19,29 @@ export class KonvaCanvasComponent implements OnInit, AfterViewInit {
   maskPolygons: Konva.Line[] = [];
   eraserEnabled: boolean = false;
   file: string | null = null;
-
+  error_msg: string | null = null;
   constructor() { }
 
   ngOnInit(): void {
     this.updateStageSize();
-    window.addEventListener('resize', this.updateStageSize.bind(this));
+    window.addEventListener('resize', this.updateStageSize.bind(this)); // Update canvas on window resize
   }
-  
+
   updateStageSize(): void {
     if (!this.stage || !this.drawingLayer || !this.backgroundLayer) return;
-    if (this.stage) {
-      this.stage.width(window.innerWidth);
-      this.stage.height(window.innerHeight);
-      this.backgroundLayer.batchDraw();
-      this.drawingLayer.batchDraw();
-    }
+    // Resize stage and layers based on window size
+    this.stage.width(window.innerWidth);
+    this.stage.height(window.innerHeight);
+    this.backgroundLayer.batchDraw();
+    this.drawingLayer.batchDraw();
   }
+
   ngAfterViewInit(): void {
-    this.initializeCanvas();
+    this.initializeCanvas(); // Initialize Konva canvas after view is loaded
   }
 
   initializeCanvas(): void {
+    // Initialize stage and layers for the canvas
     this.stage = new Konva.Stage({
       container: 'canvas-container',
       width: window.innerWidth,
@@ -54,24 +56,20 @@ export class KonvaCanvasComponent implements OnInit, AfterViewInit {
     this.stage.add(this.drawingLayer);
     this.stage.add(this.interactionLayer);
 
-    this.setupEventListeners();
+    this.setupEventListeners(); // Set up event listeners
   }
 
-  // Function to handle image upload
+  // Handle image upload and display it on the canvas
   onImageUpload(event: Event): void {
-
     if (!this.stage || !this.drawingLayer || !this.backgroundLayer) {
       console.error('Stage or layers are not initialized');
       return;
     }
 
-
     const input = event.target as HTMLInputElement;
-
 
     if (input.files && input.files[0]) {
       const reader = new FileReader();
-
 
       reader.onload = () => {
         const imageObj = new Image();
@@ -84,13 +82,13 @@ export class KonvaCanvasComponent implements OnInit, AfterViewInit {
             return;
           }
 
+          // Scale image to fit canvas and add to background layer
           const imgWidth = imageObj.width;
           const imgHeight = imageObj.height;
 
           const scaleX = this.stage.width() / imgWidth;
           const scaleY = this.stage.height() / imgHeight;
           const scale = Math.min(scaleX, scaleY);
-
 
           const bgImage = new Konva.Image({
             image: imageObj,
@@ -100,10 +98,8 @@ export class KonvaCanvasComponent implements OnInit, AfterViewInit {
             y: (this.stage.height() - imgHeight * scale) / 2,
           });
 
-          this.backgroundLayer.destroyChildren();
-
+          this.backgroundLayer.destroyChildren(); // Clear existing background
           this.backgroundLayer.add(bgImage);
-
           this.backgroundLayer.batchDraw();
         };
 
@@ -118,27 +114,29 @@ export class KonvaCanvasComponent implements OnInit, AfterViewInit {
       alert('Please select an image file to upload.');
     }
   }
+
   removeImage(): void {
     if (this.backgroundLayer) {
-      this.backgroundLayer.destroyChildren();
+      this.backgroundLayer.destroyChildren(); // Remove background image
       this.backgroundLayer.batchDraw();
       this.file = null;
     }
   }
 
-
   setupEventListeners(): void {
     if (!this.stage) return;
     const canvas = this.stage.container();
 
+    // Handle click events for drawing or erasing polygons
     canvas.addEventListener('click', (e) => {
       if (this.eraserEnabled) {
-        this.erasePolygon(e);
+        this.erasePolygon(e); // Erase polygon if eraser is enabled
       } else {
-        this.drawPolygon(e);
+        this.drawPolygon(e); // Draw new polygon
       }
     });
 
+    // Close polygon on pressing "n" key
     document.addEventListener('keydown', (event) => {
       if (event.key === 'n' && this.currentPolygon) {
         this.closePolygon();
@@ -153,6 +151,7 @@ export class KonvaCanvasComponent implements OnInit, AfterViewInit {
     if (!mousePos) return;
 
     if (!this.currentPolygon) {
+      // Start new polygon
       this.currentPolygon = new Konva.Line({
         points: [mousePos.x, mousePos.y],
         stroke: 'blue',
@@ -164,6 +163,7 @@ export class KonvaCanvasComponent implements OnInit, AfterViewInit {
 
       this.drawingLayer.add(this.currentPolygon);
     } else {
+      // Add points to existing polygon
       const points = this.currentPolygon.points() || [];
       points.push(mousePos.x, mousePos.y);
       this.currentPolygon.points(points);
@@ -171,10 +171,9 @@ export class KonvaCanvasComponent implements OnInit, AfterViewInit {
     this.drawingLayer.batchDraw();
   }
 
-
   closePolygon(): void {
     if (this.currentPolygon) {
-      this.currentPolygon.closed(true);
+      this.currentPolygon.closed(true); // Close the polygon
       this.maskPolygons.push(this.currentPolygon);
       this.currentPolygon = null;
     }
@@ -187,7 +186,9 @@ export class KonvaCanvasComponent implements OnInit, AfterViewInit {
       fill: polygon.fill()
     }));
     if (!maskData?.length) {
-      return alert('Nothing to export');
+      this.error_msg = 'Nothing to export'
+      // return alert('Nothing to export');
+      return;
     }
     const maskJson = JSON.stringify(maskData, null, 2);
 
@@ -201,17 +202,17 @@ export class KonvaCanvasComponent implements OnInit, AfterViewInit {
     URL.revokeObjectURL(a.href);
   }
 
-
   clearMask(): void {
     if (!this.drawingLayer) return;
-    this.drawingLayer.destroyChildren();
+    this.drawingLayer.destroyChildren(); // Clear the drawing layer
     this.maskPolygons = [];
     this.currentPolygon = null;
+    this.eraserEnabled = false;
     this.drawingLayer.batchDraw();
   }
 
   enableEraser(): void {
-    this.eraserEnabled = !this.eraserEnabled;
+    this.eraserEnabled = !this.eraserEnabled; // Toggle eraser mode
   }
 
   erasePolygon(e: MouseEvent): void {
@@ -221,14 +222,13 @@ export class KonvaCanvasComponent implements OnInit, AfterViewInit {
     if (mousePos) {
       this.maskPolygons.forEach((polygon, index) => {
         if (this.isPointInPolygon(mousePos, polygon)) {
-          polygon.destroy();
+          polygon.destroy(); // Remove polygon if point is inside it
           this.maskPolygons.splice(index, 1);
         }
       });
       this.drawingLayer.batchDraw();
     }
   }
-
 
   isPointInPolygon(point: { x: number; y: number }, polygon: Konva.Line): boolean {
     const points = polygon.points();

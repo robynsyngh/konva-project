@@ -1,7 +1,8 @@
 <div class="toolbar">
     <button (click)="enableEraser()">Toggle Eraser {{eraserEnabled ? 'OFF' : 'ON'}}</button>
     <button (click)="clearMask()">Clear Mask</button>
-    <button (click)="exportAsFile()">Export Mask</button>
+    <button (click)="exportAsFile()">Export Mask JSON</button>   
+    <button (click)="saveCanvasAsBinary()">Save Canvas As Binary</button>    
     <button (click)="removeImage()" [disabled]="!file">Delete Image</button>
     <!-- <input type="file" (change)="onImageUpload($event)" accept="image/*" /> -->
       <!-- Custom file input button -->

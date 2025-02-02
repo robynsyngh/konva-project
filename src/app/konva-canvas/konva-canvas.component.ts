@@ -56,6 +56,11 @@ export class KonvaCanvasComponent implements OnInit, AfterViewInit {
     this.stage.add(this.drawingLayer);
     this.stage.add(this.interactionLayer);
 
+    // Ensure the drawing layer is on top and the background is below it
+    this.drawingLayer.zIndex(1);  // Make drawing layer appear on top
+    this.backgroundLayer.zIndex(0); // Keep background below the drawing layer
+    this.stage.batchDraw(); // Redraw the stage to apply layer order changes
+
     this.setupEventListeners(); // Set up event listeners
   }
 
@@ -247,5 +252,57 @@ export class KonvaCanvasComponent implements OnInit, AfterViewInit {
     }
     return inside;
   }
+
+  saveCanvasAsBinary(): void {
+    if (!this.stage || !this.drawingLayer) {
+      console.error('Stage or layers are not initialized.');
+      return;
+    }
+
+    // Create a new canvas for the binary mask
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.width = this.stage.width();
+    canvas.height = this.stage.height();
+
+    // Fill the canvas with white background (0)
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Loop through all polygons and draw them in black (1)
+    this.maskPolygons.forEach(polygon => {
+      const points = polygon.points();
+      if (points.length < 6) return; // Skip if the polygon is too small (not a valid polygon)
+
+      ctx.beginPath();
+      ctx.moveTo(points[0], points[1]);
+
+      for (let i = 2; i < points.length; i += 2) {
+        ctx.lineTo(points[i], points[i + 1]);
+      }
+
+      ctx.closePath();
+      ctx.fillStyle = 'black';  // Draw polygon as black (1)
+      ctx.fill();
+    });
+
+    // Convert the canvas content to a data URL and download it as PNG
+    const dataURL = canvas.toDataURL('image/png');
+    this.downloadURI(dataURL, 'binary_mask.png');
+  }
+
+  downloadURI(uri: string, name: string): void {
+    const link = document.createElement('a');
+    link.download = name;
+    link.href = uri;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+
+
 
 }
